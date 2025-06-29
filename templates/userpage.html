@@ -9,12 +9,6 @@
 
 
 </head>
-<script>
-
-
-<script>
-
-</script>
 
 
 <div class="header">
@@ -60,13 +54,12 @@
 </div>
 
 
-  <!-- Статистика -->
+
 <div class="user-stats">
   <div><span id="followersBtn" class="clickable-text">Підписники: 123</span></div>
   <div><span id="followingBtn" class="clickable-text">Підписки: 45</span></div>
 </div>
 
-<!-- ПІДПИСНИКИ -->
 <div id="followersModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeFollowersModal()">&times;</span>
@@ -87,7 +80,7 @@
   </div>
 </div>
 
-<!-- ПІДПИСКИ -->
+
 <div id="followingModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeFollowingModal()">&times;</span>
@@ -150,14 +143,14 @@
   <button>Message</button>
   </div>
 {% endif %}
-  <!-- Опис профілю -->
+
   <div class="user-description">
     {{ des }}
   </div>
 
   <hr style="border-color: #333; margin: 30px 0;">
 
-  <!-- Пости користувача -->
+
   {% for post in posts %}
   <div class="post">
     <div class="post-header">
@@ -238,7 +231,7 @@
   }
 
 
-  let offset = 10; // бо перші 10 постів уже є
+  let offset = 10;
 let loading = false;
 let noMorePosts = false;
 
@@ -263,7 +256,7 @@ function closeEditDescriptionModal() {
   document.getElementById('editDescriptionModal').style.display = 'none';
 }
 
-// Закриваємо модалку при кліку поза нею
+
 window.addEventListener('click', function(event) {
   const modal = document.getElementById('editDescriptionModal');
   if (event.target === modal) {
