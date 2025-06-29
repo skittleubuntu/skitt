@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='loging.css') }}">
+  <title>Verify code</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+
+
+
+</head>
+<body>
+
+  <h1><b>Skitt</b></h1>
+
+  <div class="box">
+   <p>Enter the code what was sent to <b>{{mail}}</b></p>
+
+    <form method="POST">
+      <input
+        type="text"
+        name="code"
+        maxlength="6"
+        pattern="\d{6}"
+        required
+        title="Введіть 6 цифр"
+        autocomplete="off"
+        autofocus
+      />
+      <button type="submit">Send</button>
+    </form>
+    <div class="message">
+          {% if message %}
+  <p style="color: red;">{{ message }}</p>
+    {% endif %}
+
+    </div>
+  </div>
+</body>
+</html>

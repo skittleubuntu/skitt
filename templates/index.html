@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Main page</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+
+</head>
+<body>
+
+<script>
+  function openModal() {
+    document.getElementById('postModal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('postModal').style.display = 'none';
+  }
+
+
+  window.onclick = function(event) {
+    const modal = document.getElementById('postModal');
+    if (event.target === modal) {
+      closeModal();
+    }
+  }
+
+
+  let offset = 10; // бо перші 10 постів уже є
+let loading = false;
+let noMorePosts = false;
+
+window.addEventListener('scroll', () => {
+  if (loading || noMorePosts) return;
+
+  const scrollPosition = window.innerHeight + window.scrollY;
+  const documentHeight = document.body.offsetHeight;
+
+  if (scrollPosition >= documentHeight - 300) {
+    loadMorePosts();
+  }
+});
+
+function loadMorePosts() {
+  loading = true;
+
+
+  fetch(`/api/posts?offset=${offset}&limit=10`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.length === 0) {
+
+
+        noMorePosts = true;
+        return;
+      }
+
+      const container = document.getElementById("posts-container");
+
+      data.forEach(post => {
+        const postHTML = `
+<div class="post">
+  <div class="post-header">
+    <h3 class="author">
+      <a class="post-link" href="/${post.author}">${post.author}</a>
+    </h3>
+    <h2 class="title">${post.title}</h2>
+  </div>
+
+  <div class="post-content">
+    <p>${post.content}</p>
+  </div>
+
+  <div class="post-footer">
+    <div class="post-time">${post.time}</div>
+    <div class="post-buttons">
+      <button class="post-button">💬 Comment</button>
+    </div>
+  </div>
+</div><hr>`;
+        container.insertAdjacentHTML("beforeend", postHTML);
+      });
+
+      offset += 10;
+      loading = false;
+    })
+    .catch(error => {
+      console.error(error);
+      loading = false;
+    });
+}
+</script>
+
+  <div class="header">
+
+
+
+
+    <h1><a href="">Skitt</a></h1>
+
+   <form action="/logout" method="POST">
+  <button class="logout-btn">Logout</button>
+</form>
+
+  </div>
+
+
+
+
+  <div class="left">
+    <div class="button-column">
+
+        <form action="/" method="POST">
+      <button class="button">Home</button>
+            </form>
+
+        <form action="/{{ main_user.name }}" method="POST">
+      <button class="button">Profile</button>
+            </form>
+
+      <button class="button">Messages</button>
+      <button class="button" style="background-color: cornflowerblue" onclick="openModal()">Make post</button>
+
+
+    </div>
+  </div>
+
+  <div class="main" id="posts-container">
+
+      <div id="postModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <form action="/makepost/index/{{main_user.id}}" method="POST">
+      <h2>New post</h2>
+      <input type="text" name="title" placeholder="Tittle" required><br><br>
+      <textarea name="content" placeholder="What's happened today?" rows="6" required></textarea><br><br>
+      <button type="submit" class="post-button">Send</button>
+    </form>
+  </div>
+</div>
+
+
+<hr>
+
+      {% for post in posts %}
+
+    <div class="post">
+  <div class="post-header">
+    <h3 class="author">
+<a class="post-link" href="{{ url_for('user_profile', username=post.author) }}">{{ post.author }}</a>
+
+</h3>
+    <h2 class="title">{{ post.title }}</h2>
+  </div>
+
+  <div class="post-content">
+    <p>{{ post.text }}</p>
+  </div>
+
+  <div class="post-footer">
+    <div class="post-time">{{ post.day }}</div>
+    <div class="post-buttons">
+
+        <form action="/post/{{ post.id }}" method="post">
+      <button class="post-button">💬 Comment</button>
+        </form>
+
+    </div>
+  </div>
+</div>
+<hr>
+
+      {% endfor %}
+
+
+</div>
+
+
+
+
+
+ <div class="right">
+  <div class="info-box">
+    <h4><a href="">{{ main_user.name }}</a></h4>
+    <p>Your profile</p>
+  </div>
+  <div class="info-box">
+    <h4>Заголовок 2</h4>
+    <p>Текст або інша інформація 2</p>
+  </div>
+  <div class="info-box">
+    <h4>Заголовок 3</h4>
+    <p>Текст або інша інформація 3</p>
+  </div>
+</div>
+
+</body>
+</html>

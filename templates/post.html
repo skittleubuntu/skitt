@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ post.title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+
+</head>
+<body>
+
+<script>
+  function openModal() {
+    document.getElementById('postModal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('postModal').style.display = 'none';
+  }
+
+
+  window.onclick = function(event) {
+    const modal = document.getElementById('postModal');
+    if (event.target === modal) {
+      closeModal();
+    }
+  }
+
+
+  let offset = 10; // бо перші 10 постів уже є
+let loading = false;
+let noMorePosts = false;
+
+window.addEventListener('scroll', () => {
+  if (loading || noMorePosts) return;
+
+  const scrollPosition = window.innerHeight + window.scrollY;
+  const documentHeight = document.body.offsetHeight;
+
+  if (scrollPosition >= documentHeight - 300) {
+    loadMorePosts();
+  }
+});
+
+
+
+</script>
+
+
+  <div class="header">
+
+
+
+
+    <h1><a href="">Skitt</a></h1>
+
+   <form action="/logout" method="POST">
+  <button class="logout-btn">Logout</button>
+</form>
+
+  </div>
+
+
+
+
+  <div class="left">
+    <div class="button-column">
+
+        <form action="/" method="POST">
+      <button class="button">Home</button>
+            </form>
+
+        <form action="/{{ main_user.name }}" method="POST">
+      <button class="button">Profile</button>
+            </form>
+
+      <button class="button">Messages</button>
+      <button class="button" style="background-color: cornflowerblue" onclick="openModal()">Make post</button>
+
+
+    </div>
+  </div>
+
+
+<div class="main-post">
+     <div id="postModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <form action="/makepost/index/{{main_user.id}}" method="POST">
+      <h2>New post</h2>
+      <input type="text" name="title" placeholder="Tittle" required><br><br>
+      <textarea name="content" placeholder="What's happened today?" rows="6" required></textarea><br><br>
+      <button type="submit" class="post-button">Send</button>
+    </form>
+  </div>
+</div>
+
+<a href="{{ url_for('index') }}" class="back-button">← Back</a>
+
+    <div class="post">
+  <div class="post-header">
+    <h3 class="author">
+<a class="post-link" href="{{ url_for('user_profile', username=post.author) }}">{{ post.author }}</a>
+
+</h3>
+    <h2 class="title">{{ post.title }}</h2>
+  </div>
+
+  <div class="post-content">
+    <p>{{ post.text }}</p>
+  </div>
+
+  <div class="post-footer">
+    <div class="post-time">{{ post.day }}</div>
+</div>
+    </div>
+      <form action="{{ url_for('makereply', post_id=post.id, user_id=main_user.id) }}" method="POST" class="reply-form">
+    <textarea name="reply_text" placeholder="Add reply..." required></textarea>
+    <button type="submit">Send</button>
+  </form>
+</div>
+
+<div class = "replyes">
+
+  {% for reply in replyes %}
+
+  <div class="reply">
+  <div class="reply-header">
+    <h3 class="author">
+<a class="reply-link" href="{{ url_for('user_profile', username=reply.author) }}">{{ reply.author }}</a>
+
+</h3>
+
+  </div>
+
+  <div class="reply-content">
+    <p>{{ reply.text }}</p>
+  </div>
+
+  <div class="reply-footer">
+    <div class="reply-time">{{ reply.day }}</div>
+</div>
+    </div>
+
+{% endfor %}
+</div>
+</body>
+</html>

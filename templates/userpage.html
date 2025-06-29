@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>User Page</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+
+
+</head>
+<script>
+
+
+<script>
+
+</script>
+
+
+<div class="header">
+  <h1><a href="/">Skitt</a></h1>
+  <form action="/logout" method="POST">
+    <button class="logout-btn">Logout</button>
+  </form>
+</div>
+
+<div class="left">
+  <div class="button-column">
+    <form action="/" method="POST">
+      <button class="button">Home</button>
+    </form>
+    <form action="/{{ main_user.name }}" method="POST">
+      <button class="button">Profile</button>
+    </form>
+    <button class="button">Messages</button>
+    <button class="button" style="background-color: cornflowerblue" onclick="openModal()">Make post</button>
+  </div>
+</div>
+
+<div class="main">
+      <div id="postModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <form action="/makepost/index/{{main_user.id}}" method="POST">
+      <h2>New post</h2>
+      <input type="text" name="title" placeholder="Tittle" required><br><br>
+      <textarea name="content" placeholder="What's happened today?" rows="6" required></textarea><br><br>
+      <button type="submit" class="post-button">Send</button>
+    </form>
+  </div>
+</div>
+  <div class="user-name-large" style="background-color: black; height: 10vh">
+  {{ user.name }}
+
+{% if data.admin == "True" %}
+  <img src="https://pm1.aminoapps.com/7289/46d55524f8ddb528f315fe63e738045a4d39c478r1-822-714v2_uhq.jpg" alt="Admin" class="badge-icon">
+{% elif data.verified == "True" %}
+  <img src="https://i.pinimg.com/originals/26/0d/a5/260da51799855beda764dc201b25391a.gif" alt="Verified" class="badge-icon">
+{% endif %}
+</div>
+
+
+  <!-- Статистика -->
+<div class="user-stats">
+  <div><span id="followersBtn" class="clickable-text">Підписники: 123</span></div>
+  <div><span id="followingBtn" class="clickable-text">Підписки: 45</span></div>
+</div>
+
+<!-- ПІДПИСНИКИ -->
+<div id="followersModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeFollowersModal()">&times;</span>
+    <h2>Підписники</h2>
+    <div class="followers-list">
+      <div class="user-item">userA</div>
+      <div class="user-item">userB</div>
+        <div class="user-item">userA</div>
+      <div class="user-item">userB</div>
+        <div class="user-item">userA</div>
+      <div class="user-item">userB</div>
+        <div class="user-item">userA</div>
+      <div class="user-item">userB</div>
+
+        <div class="user-item">userA</div>
+      <div class="user-item">userB</div>
+    </div>
+  </div>
+</div>
+
+<!-- ПІДПИСКИ -->
+<div id="followingModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeFollowingModal()">&times;</span>
+    <h2>Підписки</h2>
+    <div class="followers-list">
+      <div class="user-item">user1</div>
+      <div class="user-item">user2</div>
+      <div class="user-item">user3</div>
+      <div class="user-item">user4</div>
+      <div class="user-item">user5</div>
+      <div class="user-item">user6</div>
+      <div class="user-item">user7</div>
+      <div class="user-item">user8</div>
+      <div class="user-item">user9</div>
+      <div class="user-item">user10</div>
+             <div class="user-item">user1</div>
+      <div class="user-item">user2</div>
+      <div class="user-item">user3</div>
+      <div class="user-item">user4</div>
+      <div class="user-item">user5</div>
+      <div class="user-item">user6</div>
+      <div class="user-item">user7</div>
+      <div class="user-item">user8</div>
+      <div class="user-item">user9</div>
+      <div class="user-item">user10</div>
+    </div>
+  </div>
+</div>
+
+
+
+    {% if owner %}
+
+      <div class="user-buttons">
+    <button onclick="openEditDescriptionModal()">Edit profile</button>
+  </div>
+        <p>Referal code: {{ data["refcode"] }}</p>
+
+
+<div id="editDescriptionModal" class="modal" style="display:none; justify-content: center; align-items: center;">
+  <div class="modal-content">
+    <span class="close" onclick="closeEditDescriptionModal()">&times;</span>
+    <form id="editDescriptionForm" action="/{{ user.name }}" method="POST">
+      <h2>Редагувати опис профілю</h2>
+      <textarea name="description" placeholder="Enter new info..." rows="6" required style="resize:none;">{{ user.description or "" }}</textarea><br><br>
+      <button type="submit" class="post-button">Відправити</button>
+    </form>
+  </div>
+</div>
+{% else %}
+
+  <div class="user-buttons">
+<form method="POST">
+  {% if data.follow %}
+    <button type="submit"  name="action" value="unfollow">Unfollow</button>
+  {% else %}
+    <button type="submit" name="action" style="background-color: cornflowerblue" value="follow">Follow</button>
+  {% endif %}
+</form>
+  <button>Message</button>
+  </div>
+{% endif %}
+  <!-- Опис профілю -->
+  <div class="user-description">
+    {{ des }}
+  </div>
+
+  <hr style="border-color: #333; margin: 30px 0;">
+
+  <!-- Пости користувача -->
+  {% for post in posts %}
+  <div class="post">
+    <div class="post-header">
+      <div class="author">{{ post.author }}</div>
+      <div class="title">{{ post.title }}</div>
+    </div>
+    <div class="post-content">
+      <p>{{ post.text }}</p>
+    </div>
+    <div class="post-footer">
+      <div class="post-time">{{ post.day }}</div>
+      <div class="post-buttons">
+        <form action="/post/{{ post.id }}" method="post">
+          <button class="post-button">💬 Comment</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+</div>
+
+<div class="right">
+  <div class="info-box">
+    <h4><a href="">{{ main_user.name }}</a></h4>
+    <p>Your profile</p>
+  </div>
+  <div class="info-box">
+    <h4>Заголовок 2</h4>
+    <p>Текст або інша інформація 2</p>
+  </div>
+  <div class="info-box">
+    <h4>Заголовок 3</h4>
+    <p>Текст або інша інформація 3</p>
+  </div>
+</div>
+<script>
+  const followersModal = document.getElementById("followersModal");
+  const followingModal = document.getElementById("followingModal");
+
+  document.getElementById("followersBtn").onclick = function () {
+    followersModal.style.display = "flex";
+  };
+
+  document.getElementById("followingBtn").onclick = function () {
+    followingModal.style.display = "flex";
+  };
+
+  function closeFollowersModal() {
+    followersModal.style.display = "none";
+  }
+
+  function closeFollowingModal() {
+    followingModal.style.display = "none";
+  }
+
+  window.onclick = function (event) {
+    if (event.target === followersModal) followersModal.style.display = "none";
+    if (event.target === followingModal) followingModal.style.display = "none";
+
+
+
+  };
+ function openModal() {
+    document.getElementById('postModal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('postModal').style.display = 'none';
+  }
+
+
+  window.onclick = function(event) {
+    const modal = document.getElementById('postModal');
+    if (event.target === modal) {
+      closeModal();
+    }
+  }
+
+
+  let offset = 10; // бо перші 10 постів уже є
+let loading = false;
+let noMorePosts = false;
+
+window.addEventListener('scroll', () => {
+  if (loading || noMorePosts) return;
+
+  const scrollPosition = window.innerHeight + window.scrollY;
+  const documentHeight = document.body.offsetHeight;
+
+  if (scrollPosition >= documentHeight - 300) {
+    loadMorePosts();
+  }
+});
+
+
+
+function openEditDescriptionModal() {
+  document.getElementById('editDescriptionModal').style.display = 'flex';
+}
+
+function closeEditDescriptionModal() {
+  document.getElementById('editDescriptionModal').style.display = 'none';
+}
+
+// Закриваємо модалку при кліку поза нею
+window.addEventListener('click', function(event) {
+  const modal = document.getElementById('editDescriptionModal');
+  if (event.target === modal) {
+    closeEditDescriptionModal();
+  }
+});
+
+
+</script>
+
+
+</body>
+</html>

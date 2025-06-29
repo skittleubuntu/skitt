@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+
+  <title>Is Not Exists</title>
+  <style>
+    /* Повністю займаємо весь екран */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background-color: black;
+      color: white;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Повідомлення зверху */
+    .message {
+      font-size: 3rem;
+      font-weight: bold;
+      text-align: center;
+      padding: 20px 0;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      z-index: 2;
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    /* Контейнер з гіфкою на весь екран під повідомленням */
+    .gif-container {
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Гіфка */
+    .gif-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      opacity: 0.8; /* трохи прозорості, щоб повідомлення читалося краще */
+    }
+  </style>
+</head>
+<body>
+  <div class="message">IS NOT EXISTS</div>
+
+  <div class="gif-container">
+    <!-- Встав свій URL до гіфки сюди -->
+    <img src="https://i.pinimg.com/originals/be/9d/4a/be9d4a130fa9f4c70901e68afc080e9b.gif" alt="Background GIF" />
+  </div>
+</body>
+</html>
