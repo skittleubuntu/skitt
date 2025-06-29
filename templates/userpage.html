@@ -56,26 +56,21 @@
 
 
 <div class="user-stats">
-  <div><span id="followersBtn" class="clickable-text">Підписники: 123</span></div>
-  <div><span id="followingBtn" class="clickable-text">Підписки: 45</span></div>
+<div><span id="followersBtn" class="clickable-text">Followers: {{ followers|length }}</span></div>
+<div><span id="followingBtn" class="clickable-text">Subscribes: {{ subs|length }}</span></div>
+
 </div>
 
 <div id="followersModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeFollowersModal()">&times;</span>
-    <h2>Підписники</h2>
+    <h2>Followers</h2>
     <div class="followers-list">
-      <div class="user-item">userA</div>
-      <div class="user-item">userB</div>
-        <div class="user-item">userA</div>
-      <div class="user-item">userB</div>
-        <div class="user-item">userA</div>
-      <div class="user-item">userB</div>
-        <div class="user-item">userA</div>
-      <div class="user-item">userB</div>
 
-        <div class="user-item">userA</div>
-      <div class="user-item">userB</div>
+        {% for follower in followers %}
+      <div class="user-item"><a style="color:darkcyan;" href="{{ url_for('user_profile', username=follower.name) }}">{{ follower.name }}</a></div>
+        {% endfor %}
+
     </div>
   </div>
 </div>
@@ -86,26 +81,9 @@
     <span class="close" onclick="closeFollowingModal()">&times;</span>
     <h2>Підписки</h2>
     <div class="followers-list">
-      <div class="user-item">user1</div>
-      <div class="user-item">user2</div>
-      <div class="user-item">user3</div>
-      <div class="user-item">user4</div>
-      <div class="user-item">user5</div>
-      <div class="user-item">user6</div>
-      <div class="user-item">user7</div>
-      <div class="user-item">user8</div>
-      <div class="user-item">user9</div>
-      <div class="user-item">user10</div>
-             <div class="user-item">user1</div>
-      <div class="user-item">user2</div>
-      <div class="user-item">user3</div>
-      <div class="user-item">user4</div>
-      <div class="user-item">user5</div>
-      <div class="user-item">user6</div>
-      <div class="user-item">user7</div>
-      <div class="user-item">user8</div>
-      <div class="user-item">user9</div>
-      <div class="user-item">user10</div>
+            {% for sub in subs %}
+      <div class="user-item"><a style="color:darkcyan;" href="{{ url_for('user_profile', username=sub.name) }}">{{ sub.name }}</a></div>
+        {% endfor %}
     </div>
   </div>
 </div>
@@ -174,18 +152,16 @@
 </div>
 
 <div class="right">
-  <div class="info-box">
-    <h4><a href="">{{ main_user.name }}</a></h4>
+  <div class="info-box" style="background-color: cornflowerblue">
+    <h4><a style="color:black" href="{{ url_for('user_profile', username=main_user.name) }}">{{ main_user.name }}</a></h4>
     <p>Your profile</p>
   </div>
+     {% for f in fyp %}
   <div class="info-box">
-    <h4>Заголовок 2</h4>
-    <p>Текст або інша інформація 2</p>
+    <h4><a href="{{ url_for('user_profile', username=f.name) }}">{{ f.name }}</a></h4>
+    <p>Maybe you must know</p>
   </div>
-  <div class="info-box">
-    <h4>Заголовок 3</h4>
-    <p>Текст або інша інформація 3</p>
-  </div>
+     {% endfor %}
 </div>
 <script>
   const followersModal = document.getElementById("followersModal");

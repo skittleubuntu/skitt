@@ -2,13 +2,11 @@ from pyexpat.errors import messages
 from models import User
 from flask import Flask, request, redirect, render_template, make_response, render_template_string, jsonify, url_for
 from functions import *
+from fyp import *
+from static import *
 app = Flask(__name__)
 
-USERS_DB = "users/users.csv"
-POSTS_DB = "posts/post.csv"
-TEMP_DB = "users/temp.csv"
-REPLYES_DB = "posts/replyes.csv"
-HASH_DB = "users/hashkeys.csv"
+
 
 
 @app.route("/api/posts")
@@ -38,7 +36,17 @@ def internal_server_error(e):
 @app.route("/", methods=["POST", "GET"])
 def index():
 
+
+
+
     user_id = request.cookies.get("user_id")
+
+    g = Graph()
+    fyp = []
+
+    for el in g.bfs(user_id, 2):
+        fyp.append(User(el, get_username(USERS_DB, el)))
+
     hash = request.cookies.get("hash_key")
     if not user_id or not isinstance(user_id, str):
         print("No coockies")
@@ -53,7 +61,7 @@ def index():
         return redirect("/login")
 
 
-    return render_template("index.html", main_user=main_user, posts=posts)
+    return render_template("index.html", main_user=main_user, posts=posts, fyp=fyp)
 
 
 @app.errorhandler(404)
@@ -72,15 +80,36 @@ def post(post_id):
 
 @app.route('/<username>', methods=["POST", "GET"])
 def user_profile(username):
+
+
     user_id = request.cookies.get("user_id")
+
+
+
+
+
+    g = Graph()
+    fyp = []
+
+    for el in g.bfs(user_id, 2):
+        fyp.append(User(el, get_username(USERS_DB, el)))
+
+
+
+
+
+
+
     owner = False
     main_user = User(user_id,get_username(USERS_DB, user_id))
     des = get_user_description(username)
     data = get_user_info(username)
 
+    subs = get_subscribes(username)
+    followers = get_followers(username)
 
 
-
+    print(f"{username} followers {followers}")
 
     if not userIsExist(username, USERS_DB):
         return render_template("usernotexist.html")
@@ -100,7 +129,7 @@ def user_profile(username):
             update_user_description(username, new_description)
             return redirect(url_for('user_profile', username=username))
 
-    if request.method == "POST":
+    if request.method == "POST" and not owner:
 
         if not user_is_follower(main_user.name, username):
             subscribe(USERS_DB,main_user.name,username)
@@ -115,7 +144,7 @@ def user_profile(username):
     posts = get_user_posts(POSTS_DB, username)
 
     return render_template("userpage.html", owner=owner, user=user, main_user=main_user,
-                           posts=posts, des=des, data=data)
+                           posts=posts, des=des, data=data, subs=subs, followers=followers, fyp=fyp)
 
 
 

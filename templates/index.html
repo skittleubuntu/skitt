@@ -182,18 +182,18 @@ function loadMorePosts() {
 
 
  <div class="right">
-  <div class="info-box">
-    <h4><a href="">{{ main_user.name }}</a></h4>
+  <div class="info-box" style="background-color: cornflowerblue">
+    <h4><a style="color:black" href="{{ url_for('user_profile', username=main_user.name) }}">{{ main_user.name }}</a></h4>
     <p>Your profile</p>
   </div>
+
+     {% for f in fyp %}
   <div class="info-box">
-    <h4>Заголовок 2</h4>
-    <p>Текст або інша інформація 2</p>
+    <h4><a href="{{ url_for('user_profile', username=f.name) }}">{{ f.name }}</a></h4>
+    <p>Maybe you must know</p>
   </div>
-  <div class="info-box">
-    <h4>Заголовок 3</h4>
-    <p>Текст або інша інформація 3</p>
-  </div>
+     {% endfor %}
+
 </div>
 
 </body>

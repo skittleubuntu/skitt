@@ -50,12 +50,12 @@ def add_user(file, username, email, password):
 
     open(f"users/{username}/notify.txt", "w")
     with open(f"users/{username}/followers.csv", "w") as f:
-        f.write("id,username")
+        f.write("id,username\n")
     with open(f"users/{username}/info.csv", "w") as f:
         f.write("admin,verified,refcode,activates\n")
         f.write(f"False,False,{generate_code()},0")
     with open(f"users/{username}/subscribes.csv", "w") as f:
-        f.write("id,username")
+        f.write("id,username\n")
 
     return new_id
 #
@@ -423,3 +423,46 @@ def unsubscribe(user, king):
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
+
+
+def get_subscribes(username):
+    subs = []
+    with open(f"users/{username}/subscribes.csv", "r") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            subs.append(User(row["id"], row["username"]))
+    return subs
+
+
+
+print(get_subscribes("skittle"))
+
+
+def get_followers(username):
+    follow = []
+    with open(f"users/{username}/followers.csv", "r") as f:
+        reader = csv.DictReader(f)
+
+        for row in reader:
+            follow.append(User(row["id"], row["username"]))
+    return follow
+
+
+def are_friends(user1, user2):
+
+    user1_is_sub = False
+    user2_is_sub = False
+
+    with open(f"users/{user1}/followers.csv", "r") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row["username"] == user2:
+                user1_is_sub = True
+
+    with open(f"users/{user2}/followers.csv", "r") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if row["username"] == user1:
+                user2_is_sub = True
+
+    return user1_is_sub and user2_is_sub
