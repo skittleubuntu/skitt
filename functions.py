@@ -243,7 +243,7 @@ def spam(email, large_number):
     SMTP_SERVER = "smtp.gmail.com"
     SMTP_PORT = 465
     EMAIL_SENDER = "skitt.noreply@gmail.com"
-    EMAIL_PASSWORD = "ylvxipafcsqcjgob"
+    EMAIL_PASSWORD = "ylvxipafcsqcjgobwwzxc"
     EMAIL_RECEIVER = email
     SUBJECT = "Skitt registration"
 
