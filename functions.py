@@ -10,7 +10,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import secrets
 
-from static import USERS_DB
+from static import USERS_DB, POSTS_DB
 
 
 def userIsExist(user, file):
@@ -243,7 +243,7 @@ def spam(email, large_number):
     SMTP_SERVER = "smtp.gmail.com"
     SMTP_PORT = 465
     EMAIL_SENDER = "skitt.noreply@gmail.com"
-    EMAIL_PASSWORD = "ylvxipafcsqcjgobwwzxc"
+    EMAIL_PASSWORD = "ylvxipafcsqcjgob"
     EMAIL_RECEIVER = email
     SUBJECT = "Skitt registration"
 
@@ -312,7 +312,23 @@ def read_replyes(file, id):
 
         return reversed(replyes)
 
+def get_author_from_postid(file, postid):
+    with open(file, "r") as f:
+        reader = csv.DictReader(f)
+
+        for row in reader:
+            if row["id"] == postid:
+                return row["author"]
+
+
 def make_reply(file, postid, author, text):
+
+    user = get_author_from_postid(POSTS_DB, postid)
+
+    text_notify = f"[user:{author}] comment your [post:{postid}]"
+    make_notify(user, text_notify)
+
+
     with open(file, "a") as f:
         fieldnames = ["postid", "author", "text", "day"]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -352,6 +368,8 @@ def check_hash(file, id, hash):
         reader = csv.DictReader(f)
         for row in reader:
             if row["id"] == id:
+
+                print(row["id"], row["hash"])
                 return row["hash"] == hash
 
 def get_hash(file, id):
@@ -389,6 +407,11 @@ def get_user_info(username):
             return {"admin":row["admin"],"verified":row["verified"],"refcode":row["refcode"], "activates":row["activates"]}
 
 def subscribe(file,user, king):
+
+
+    text_notify = f"[user:{user}] start follow you!"
+    make_notify(king, text_notify)
+
     with open(f"users/{user}/subscribes.csv", "a") as f:
         fieldnames = ["id","username"]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -413,7 +436,8 @@ def user_is_follower(user, king):
     return False
 
 def unsubscribe(user, king):
-    # Видалити з subscribes.csv у користувача
+
+
     subscribes_path = f"users/{user}/subscribes.csv"
     with open(subscribes_path, "r", newline='') as f:
         reader = csv.DictReader(f)
@@ -436,6 +460,18 @@ def unsubscribe(user, king):
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
+
+    notify_path = f"users/{king}/notify.txt"
+    try:
+        with open(notify_path, "r") as f:
+            lines = f.readlines()
+
+        with open(notify_path, "w") as f:
+            for line in lines:
+                if not line.startswith(f"[user:{user}] start follow"):
+                    f.write(line)
+    except FileNotFoundError:
+        pass
 
 
 def get_subscribes(username):
@@ -494,9 +530,13 @@ def code_exist(code):
 
 import csv
 
-def do_verified_user(user):
+def do_verified_user(user, user_fornotify=''):
     filepath = f"users/{user}/info.csv"
 
+
+    if user_fornotify:
+        text_notify = f"[user:{user_fornotify}] write your referral code!"
+        make_notify(user, text_notify)
 
     with open(filepath, newline='', mode='r') as csvfile:
         reader = list(csv.reader(csvfile))
@@ -525,3 +565,51 @@ def do_verified_user(user):
         writer.writerow(data)
 
 
+
+
+def make_notify(user, info):
+    now = datetime.datetime.now().strftime("%d/%m/%Y - %H:%M")
+    with open(f"users/{user}/notify.txt", "a") as f:
+        f.write(f"{info}\t{now}\n")
+
+
+
+def read_notify(user):
+    notify = []
+
+    with open(f"users/{user}/notify.txt") as f:
+        for row in f:
+            line = row.strip()
+
+
+            time_match = re.search(r"\d{2}/\d{2}/\d{4} - \d{2}:\d{2}$", line)
+            if time_match:
+                time = time_match.group()
+                line = line.replace(time, '').strip()
+            else:
+                time = ''
+
+            tags = re.findall(r"\[([a-zA-Z0-9_]+):([^\]]+)\]", line)
+
+            data = {}
+            for key, value in tags:
+                data[key] = value
+
+
+            clean_text = re.sub(r"\[[a-zA-Z0-9_]+:[^\]]+\]", '', line).strip()
+
+            data['text'] = clean_text
+            data['time'] = time
+
+            notify.append(data)
+
+    print(notify)
+    return notify
+
+
+
+
+
+
+
+read_notify("skittle")
