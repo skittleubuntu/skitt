@@ -10,6 +10,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import secrets
 
+from static import USERS_DB
+
 
 def userIsExist(user, file):
     with open(file, "r") as f:
@@ -360,6 +362,17 @@ def get_hash(file, id):
                 return row["hash"]
 
 
+def get_users(file):
+    with open(file, "r") as f:
+        result = []
+        reader = csv.DictReader(f)
+        for row in reader:
+            result.append(row["username"])
+
+    return result
+
+
+
 def update_user_description(username, des):
     with open(f"users/{username}/about.txt", "w") as f:
         f.write(des)
@@ -466,3 +479,49 @@ def are_friends(user1, user2):
                 user2_is_sub = True
 
     return user1_is_sub and user2_is_sub
+
+
+def code_exist(code):
+    users = get_users(USERS_DB)
+
+    for user in users:
+        with open(f"users/{user}/info.csv", "r") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row["refcode"] == code:
+                    return user
+    return False
+
+import csv
+
+def do_verified_user(user):
+    filepath = f"users/{user}/info.csv"
+
+
+    with open(filepath, newline='', mode='r') as csvfile:
+        reader = list(csv.reader(csvfile))
+        header = reader[0]
+        data = reader[1]
+
+
+    verified_idx = header.index("verified")
+    activates_idx = header.index("activates")
+
+
+    if data[verified_idx].lower() == "false":
+        data[verified_idx] = "True"
+
+
+    try:
+        activates = int(data[activates_idx])
+    except ValueError:
+        activates = 0
+    activates += 1
+    data[activates_idx] = str(activates)
+
+    with open(filepath, newline='', mode='w', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(header)
+        writer.writerow(data)
+
+

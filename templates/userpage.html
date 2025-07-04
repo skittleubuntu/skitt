@@ -31,6 +31,9 @@
         <form action="/search" method="POST">
           <button class="button">Search 🔍</button>
             </form>
+         <form action="/notify" method="POST">
+      <button class="button">Notify</button>
+    </form>
     <button class="button" style="background-color: cornflowerblue" onclick="openModal()">Make post</button>
   </div>
 </div>
@@ -50,7 +53,7 @@
   <div class="user-name-large" style="background-color: black; height: 10vh">
   {{ user.name }}
 
-{% if data.admin == "True" %}
+{% if data.admin == "True" or data.admin == "ADMIN" %}
   <img src="https://pm1.aminoapps.com/7289/46d55524f8ddb528f315fe63e738045a4d39c478r1-822-714v2_uhq.jpg" alt="Admin" class="badge-icon">
 {% elif data.verified == "True" %}
   <img src="https://i.pinimg.com/originals/26/0d/a5/260da51799855beda764dc201b25391a.gif" alt="Verified" class="badge-icon">
@@ -83,7 +86,7 @@
 <div id="followingModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeFollowingModal()">&times;</span>
-    <h2>Підписки</h2>
+    <h2>Followers</h2>
     <div class="followers-list">
             {% for sub in subs %}
       <div class="user-item"><a style="color:darkcyan;" href="{{ url_for('user_profile', username=sub.name) }}">{{ sub.name }}</a></div>
@@ -129,9 +132,16 @@
 </form>
                 {% endif %}
 
-{% if data.admin == "True" %}
+{% if data.admin == "True" or data.admin=="ADMIN" %}
 
-    <!---TODO--->
+    <form action="/admin" style="margin-left: 30vw">
+    <div class="user-buttons">
+
+
+    <button >Admin page</button>
+            </div>
+
+    </form>
 
     {% endif %}
 
@@ -141,9 +151,9 @@
   <div class="modal-content">
     <span class="close" onclick="closeEditDescriptionModal()">&times;</span>
     <form id="editDescriptionForm" action="/{{ user.name }}" method="POST">
-      <h2>Редагувати опис профілю</h2>
+      <h2>Edit description</h2>
       <textarea name="description" placeholder="Enter new info..." rows="6" required style="resize:none;">{{ user.description or "" }}</textarea><br><br>
-      <button type="submit" class="post-button">Відправити</button>
+      <button type="submit" class="post-button">Send</button>
     </form>
   </div>
 </div>
@@ -205,12 +215,14 @@
 <script>
   const followersModal = document.getElementById("followersModal");
   const followingModal = document.getElementById("followingModal");
+  const postModal = document.getElementById('postModal');
+  const editDescriptionModal = document.getElementById('editDescriptionModal');
 
-  document.getElementById("followersBtn").onclick = function () {
+  document.getElementById("followersBtn").onclick = () => {
     followersModal.style.display = "flex";
   };
 
-  document.getElementById("followingBtn").onclick = function () {
+  document.getElementById("followingBtn").onclick = () => {
     followingModal.style.display = "flex";
   };
 
@@ -222,65 +234,47 @@
     followingModal.style.display = "none";
   }
 
-  window.onclick = function (event) {
-    if (event.target === followersModal) followersModal.style.display = "none";
-    if (event.target === followingModal) followingModal.style.display = "none";
-
-
-
-  };
- function openModal() {
-    document.getElementById('postModal').style.display = 'flex';
+  function openModal() {
+    postModal.style.display = 'flex';
   }
 
   function closeModal() {
-    document.getElementById('postModal').style.display = 'none';
+    postModal.style.display = 'none';
   }
 
+  function openEditDescriptionModal() {
+    editDescriptionModal.style.display = 'flex';
+  }
 
+  function closeEditDescriptionModal() {
+    editDescriptionModal.style.display = 'none';
+  }
+
+  // ✅ Один window.onclick для всіх модалок
   window.onclick = function(event) {
-    const modal = document.getElementById('postModal');
-    if (event.target === modal) {
-      closeModal();
-    }
-  }
+    if (event.target === followersModal) closeFollowersModal();
+    if (event.target === followingModal) closeFollowingModal();
+    if (event.target === postModal) closeModal();
+    if (event.target === editDescriptionModal) closeEditDescriptionModal();
+  };
 
-
+  // 📦 Infinite scroll
   let offset = 10;
-let loading = false;
-let noMorePosts = false;
+  let loading = false;
+  let noMorePosts = false;
 
-window.addEventListener('scroll', () => {
-  if (loading || noMorePosts) return;
+  window.addEventListener('scroll', () => {
+    if (loading || noMorePosts) return;
 
-  const scrollPosition = window.innerHeight + window.scrollY;
-  const documentHeight = document.body.offsetHeight;
+    const scrollPosition = window.innerHeight + window.scrollY;
+    const documentHeight = document.body.offsetHeight;
 
-  if (scrollPosition >= documentHeight - 300) {
-    loadMorePosts();
-  }
-});
-
-
-
-function openEditDescriptionModal() {
-  document.getElementById('editDescriptionModal').style.display = 'flex';
-}
-
-function closeEditDescriptionModal() {
-  document.getElementById('editDescriptionModal').style.display = 'none';
-}
-
-
-window.addEventListener('click', function(event) {
-  const modal = document.getElementById('editDescriptionModal');
-  if (event.target === modal) {
-    closeEditDescriptionModal();
-  }
-});
-
-
+    if (scrollPosition >= documentHeight - 300) {
+      loadMorePosts();
+    }
+  });
 </script>
+
 
 
 </body>

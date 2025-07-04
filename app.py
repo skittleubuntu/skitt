@@ -8,6 +8,9 @@ app = Flask(__name__)
 
 
 
+
+
+
 @app.route("/api/code", methods=["POST"])
 def get_ref_code():
     id = request.cookies.get("user_id")
@@ -19,14 +22,13 @@ def get_ref_code():
 
     if code_exist(code) != False:
 
-
         user = code_exist(code)
         if user == main_user.name:
             return redirect(f"/{main_user.name}")
 
         print(f"{user} ad +1")
         do_verified_user(user)
-        do_verified_user(main_user.name)
+        do_verified_user(main_user.name,user)
 
 
 
@@ -61,9 +63,7 @@ def internal_server_error(e):
 def index():
 
 
-
-
-    user_id = request.cookies.get("user_id")
+    user_id = request.cookies.get("id")
 
     g = Graph()
     fyp = []
@@ -83,7 +83,8 @@ def index():
     else:
         print("No coockies")
         return redirect("/login")
-
+    if request.method == "POST":
+        return redirect("/")
 
     return render_template("index.html", main_user=main_user, posts=posts, fyp=fyp)
 
@@ -95,76 +96,58 @@ def page_not_found(e):
 
 @app.route("/post/<post_id>", methods=["POST", "GET"])
 def post(post_id):
-    user_id = request.cookies.get("user_id")
+    user_id = request.cookies.get("id")
     main_user =  User(user_id, get_username(USERS_DB, user_id))
     post = get_post(POSTS_DB, post_id)
     replyes = read_replyes(REPLYES_DB, post_id)
+    if request.method == "POST":
+        return redirect(f"/post/{post_id}")
 
     return render_template("post.html", post=post, main_user=main_user, replyes=replyes)
 
 @app.route('/<username>', methods=["POST", "GET"])
 def user_profile(username):
+    user_id = request.cookies.get("id")
 
+    if not user_id or not get_username(USERS_DB, user_id):
+        return redirect("/login")
 
-    user_id = request.cookies.get("user_id")
-
-    g = Graph()
-    fyp = []
-
-    for el in g.bfs(user_id, 2):
-        fyp.append(User(el, get_username(USERS_DB, el)))
-
-
-
-
-
-
-
-    owner = False
-    main_user = User(user_id,get_username(USERS_DB, user_id))
-    des = get_user_description(username)
-    data = get_user_info(username)
-
-    subs = get_subscribes(username)
-    followers = get_followers(username)
-
-
-    print(f"{username} followers {followers}")
+    main_user = User(user_id, get_username(USERS_DB, user_id))
 
     if not userIsExist(username, USERS_DB):
         return render_template("usernotexist.html")
 
-    if user_id == get_id(USERS_DB, username):
-        owner = True
-        user = User(user_id, username)
+    owner = user_id == get_id(USERS_DB, username)
+    user = User(get_id(USERS_DB, username), username)
+    data = get_user_info(username)
+    des = get_user_description(username)
+    subs = get_subscribes(username)
+    followers = get_followers(username)
 
-    else:
-        user = User(get_id(USERS_DB, username), username)
+    if not owner:
         data["follow"] = user_is_follower(main_user.name, username)
 
-    if request.method == "POST" and owner:
 
-        new_description = request.form.get("description", "").strip()
-        if new_description:
-            update_user_description(username, new_description)
-            return redirect(url_for('user_profile', username=username))
-
-    if request.method == "POST" and not owner:
-
-        if not user_is_follower(main_user.name, username):
-            subscribe(USERS_DB,main_user.name,username)
-            return redirect(url_for('user_profile', username=username))
+    if request.method == "POST":
+        if owner:
+            new_description = request.form.get("description", "").strip()
+            if new_description:
+                update_user_description(username, new_description)
         else:
-            unsubscribe(main_user.name, username)
-            return redirect(url_for('user_profile', username=username))
+            if not user_is_follower(main_user.name, username):
+                subscribe(USERS_DB, main_user.name, username)
+            else:
+                unsubscribe(main_user.name, username)
+        return redirect(url_for('user_profile', username=username))
 
 
+    g = Graph()
+    fyp = [User(el, get_username(USERS_DB, el)) for el in g.bfs(user_id, 2)]
 
-    print(data)
     posts = get_user_posts(POSTS_DB, username)
-
     return render_template("userpage.html", owner=owner, user=user, main_user=main_user,
                            posts=posts, des=des, data=data, subs=subs, followers=followers, fyp=fyp)
+
 
 
 
@@ -192,13 +175,13 @@ def makereply(post_id, user_id):
 
     make_reply(REPLYES_DB, post_id, author, text)
 
-    return redirect(url_for('post', post_id=post_id))
+    return redirect(url_for('post', post_id=post_id, user_id=user_id))
 
 
 @app.route("/logout", methods=["POST"])
 def logout():
     response = make_response(redirect("/login"))
-    response.delete_cookie("user_id")
+    response.delete_cookie("id")
     response.delete_cookie("hash_key")
     return response
 
@@ -216,7 +199,7 @@ def login():
         if check_password(USERS_DB, username, password):
             id = get_id(USERS_DB, username)
             response = make_response(redirect("/"))
-            response.set_cookie("user_id", str(id))
+            response.set_cookie("id", str(id))
             hash = get_hash(HASH_DB, id)
             response.set_cookie("hash_key", hash)
             return response
@@ -292,6 +275,33 @@ def register():
 
 
     return render_template("register.html", message=message, data=data)
+
+@app.route("/notify" , methods=["POST", "GET"])
+def notify():
+    id = request.cookies.get("id")
+    hash = request.cookies.get("hash_key")
+    print(id, hash)
+    if not check_hash(HASH_DB, id ,hash):
+        return redirect("/login")
+
+    if request.method == "POST":
+        return redirect("/notify")
+
+
+    g = Graph()
+    fyp = [User(el, get_username(USERS_DB, el)) for el in g.bfs(id, 2)]
+
+    main_user = User(id, get_username(USERS_DB, id))
+
+    notifys = reversed(read_notify(main_user.name))
+
+    return render_template("notify.html", main_user=main_user, notifys=notifys, fyp=fyp)
+
+
+
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
