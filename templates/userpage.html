@@ -26,7 +26,11 @@
     <form action="/{{ main_user.name }}" method="POST">
       <button class="button">Profile</button>
     </form>
+
     <button class="button">Messages</button>
+        <form action="/search" method="POST">
+          <button class="button">Search 🔍</button>
+            </form>
     <button class="button" style="background-color: cornflowerblue" onclick="openModal()">Make post</button>
   </div>
 </div>
@@ -95,9 +99,44 @@
       <div class="user-buttons">
     <button onclick="openEditDescriptionModal()">Edit profile</button>
   </div>
+
+        <div style="display: flex">
+
+        <div>
         <p>Referal code: {{ data["refcode"] }}</p>
+        <p>Invited friends: {{ data["activates"] }}</p>
+</div>
+
+            {% if data.verified == "False" %}
+<form id="refForm" style="margin-left: 10vw; display: flex; flex-direction: column; max-width: 250px;" action="/api/code" method="POST">
+  <h3 style="color: white; margin-bottom: 8px; font-size: 16px;">Send referral code</h3>
+
+  <input
+    type="text"
+    id="refcodeInput"
+    name="refcode"
+    placeholder="Enter code"
+    style="padding: 4px 8px; font-size: 14px; border: 1px solid #00f; border-radius: 4px; background: #161b22; color: white; outline: none; margin-bottom: 8px; width: 100%; box-shadow: 0 0 4px #00f;"
+    required
+  >
+
+  <button
+    type="submit"
+    style="padding: 4px 10px; font-size: 14px; border: none; border-radius: 4px; background-color: #00f; color: white; cursor: pointer; font-weight: bold; box-shadow: 0 0 4px #00f;"
+  >
+    Send
+  </button>
+</form>
+                {% endif %}
+
+{% if data.admin == "True" %}
+
+    <!---TODO--->
+
+    {% endif %}
 
 
+</div>
 <div id="editDescriptionModal" class="modal" style="display:none; justify-content: center; align-items: center;">
   <div class="modal-content">
     <span class="close" onclick="closeEditDescriptionModal()">&times;</span>

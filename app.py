@@ -8,6 +8,30 @@ app = Flask(__name__)
 
 
 
+@app.route("/api/code", methods=["POST"])
+def get_ref_code():
+    id = request.cookies.get("user_id")
+    main_user = User(id, get_username(USERS_DB, id))
+    code = ""
+    if request.method == "POST":
+        code = request.form.get("refcode")
+        print(code)
+
+    if code_exist(code) != False:
+
+
+        user = code_exist(code)
+        if user == main_user.name:
+            return redirect(f"/{main_user.name}")
+
+        print(f"{user} ad +1")
+        do_verified_user(user)
+        do_verified_user(main_user.name)
+
+
+
+    return redirect(f"/{main_user.name}")
+
 
 @app.route("/api/posts")
 def get_posts_api():
@@ -84,10 +108,6 @@ def user_profile(username):
 
     user_id = request.cookies.get("user_id")
 
-
-
-
-
     g = Graph()
     fyp = []
 
@@ -140,7 +160,7 @@ def user_profile(username):
 
 
 
-
+    print(data)
     posts = get_user_posts(POSTS_DB, username)
 
     return render_template("userpage.html", owner=owner, user=user, main_user=main_user,

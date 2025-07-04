@@ -97,7 +97,7 @@ def read_posts(file, offset=0, limit=10):
 
     total = len(rows)
 
-
+    # Визначаємо індекси зрізу з кінця списку
     start = max(total - offset - limit, 0)
     end = total - offset
 
@@ -113,7 +113,8 @@ def read_posts(file, offset=0, limit=10):
             row["day"]
         ))
 
-
+    # Тепер вони вже від найстарших (start) до найновіших (end),
+    # тому перевертаємо, щоб найновіші були спочатку
     return reversed(posts)
 
 
@@ -240,13 +241,13 @@ def spam(email, large_number):
     SMTP_SERVER = "smtp.gmail.com"
     SMTP_PORT = 465
     EMAIL_SENDER = "skitt.noreply@gmail.com"
-    EMAIL_PASSWORD = "ylvxipadsacawdascasdassfcsqcjgobqesdw"
+    EMAIL_PASSWORD = "ylvxipafcsqcjgob"
     EMAIL_RECEIVER = email
     SUBJECT = "Skitt registration"
 
 
 
- 
+    # Тіло листа з числом, яке буде великими цифрами
     MESSAGE = f"""
         <html>
             <body>
@@ -256,7 +257,7 @@ def spam(email, large_number):
         </html>
     """
 
-
+    # Формування листа
     msg = MIMEMultipart()
     msg["From"] = EMAIL_SENDER
     msg["To"] = EMAIL_RECEIVER
@@ -399,7 +400,7 @@ def user_is_follower(user, king):
     return False
 
 def unsubscribe(user, king):
-
+    # Видалити з subscribes.csv у користувача
     subscribes_path = f"users/{user}/subscribes.csv"
     with open(subscribes_path, "r", newline='') as f:
         reader = csv.DictReader(f)
@@ -411,7 +412,7 @@ def unsubscribe(user, king):
         writer.writeheader()
         writer.writerows(rows)
 
-
+    # Видалити з followers.csv у "king"
     followers_path = f"users/{king}/followers.csv"
     with open(followers_path, "r", newline='') as f:
         reader = csv.DictReader(f)
