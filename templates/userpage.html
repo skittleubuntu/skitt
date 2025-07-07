@@ -168,7 +168,11 @@
     <button type="submit" name="action" style="background-color: cornflowerblue" value="follow">Follow</button>
   {% endif %}
 </form>
+
+
+      <form action="/messages/{{ user.name }}">
   <button>Message</button>
+          </form>
   </div>
 {% endif %}
 

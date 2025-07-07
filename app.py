@@ -460,7 +460,7 @@ def chat(username):
 
 
     if not are_friends(main_user.name, username):
-        return redirect("/index")
+        return redirect(f"/{username}")
 
     else:
         if not chat_exist(CHATS_DB, main_user.name, friend.name):
