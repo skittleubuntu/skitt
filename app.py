@@ -123,14 +123,7 @@ def index():
         serverinfo_add("visited", 1)
         set_cookie_needed = True
 
-    g = Graph()
-    fyp = []
 
-
-
-    for el in g.bfs(user_id, 2):
-        print(el)
-        fyp.append(User(el, get_username(USERS_DB, el)))
 
     hash = request.cookies.get("hash_key")
     if not user_id or not isinstance(user_id, str):
@@ -147,6 +140,16 @@ def index():
     if request.method == "POST":
         return redirect("/")
 
+    g = Graph()
+    fyp = []
+
+
+
+    for el in g.bfs(user_id, 2):
+        print(el)
+
+        if get_username(USERS_DB, el) not in [i.name for i in get_subscribes(main_user.name)]:
+            fyp.append(User(el, get_username(USERS_DB, el)))
 
     response = make_response(render_template("index.html", main_user=main_user, posts=posts, fyp=fyp))
 
@@ -210,9 +213,14 @@ def user_profile(username):
                 unsubscribe(main_user.name, username)
         return redirect(url_for('user_profile', username=username))
 
-
     g = Graph()
-    fyp = [User(el, get_username(USERS_DB, el)) for el in g.bfs(user_id, 2)]
+    fyp = []
+
+    for el in g.bfs(user_id, 2):
+        print(el)
+
+        if get_username(USERS_DB, el) not in [i.name for i in get_subscribes(main_user.name)]:
+            fyp.append(User(el, get_username(USERS_DB, el)))
 
     posts = get_user_posts(POSTS_DB, username)
     return render_template("userpage.html", owner=owner, user=user, main_user=main_user,
@@ -389,10 +397,21 @@ def notify():
         return redirect("/notify")
 
 
-    g = Graph()
-    fyp = [User(el, get_username(USERS_DB, el)) for el in g.bfs(id, 2)]
+
 
     main_user = User(id, get_username(USERS_DB, id))
+
+
+    g = Graph()
+    fyp = []
+
+
+
+    for el in g.bfs(id, 2):
+        print(el)
+
+        if get_username(USERS_DB, el) not in [i.name for i in get_subscribes(main_user.name)]:
+            fyp.append(User(el, get_username(USERS_DB, el)))
 
     notifys = reversed(read_notify(main_user.name))
 
@@ -410,10 +429,18 @@ def search():
         return redirect("/search")
 
 
-    g = Graph()
-    fyp = [User(el, get_username(USERS_DB, el)) for el in g.bfs(id, 2)]
-
     main_user = User(id, get_username(USERS_DB, id))
+
+    g = Graph()
+    fyp = []
+
+
+
+    for el in g.bfs(id, 2):
+        print(el)
+
+        if get_username(USERS_DB, el) not in [i.name for i in get_subscribes(main_user.name)]:
+            fyp.append(User(el, get_username(USERS_DB, el)))
 
 
     return render_template("search.html", main_user=main_user, fyp=fyp)
@@ -427,10 +454,20 @@ def messages():
     if not check_hash(HASH_DB, id ,hash):
         return redirect("/login")
 
-    g = Graph()
-    fyp = [User(el, get_username(USERS_DB, el)) for el in g.bfs(id, 2)]
+
 
     main_user = User(id, get_username(USERS_DB, id))
+
+    g = Graph()
+    fyp = []
+
+
+
+    for el in g.bfs(id, 2):
+        print(el)
+
+        if get_username(USERS_DB, el) not in [i.name for i in get_subscribes(main_user.name)]:
+            fyp.append(User(el, get_username(USERS_DB, el)))
 
     if request.method == "POST":
         return redirect("/messages")
@@ -452,12 +489,21 @@ def chat(username):
     if not check_hash(HASH_DB, id ,hash):
         return redirect("/login")
 
-    g = Graph()
-    fyp = [User(el, get_username(USERS_DB, el)) for el in g.bfs(id, 2)]
+
 
     main_user = User(id, get_username(USERS_DB, id))
     friend = User(get_id(USERS_DB, username), username)
 
+    g = Graph()
+    fyp = []
+
+
+
+    for el in g.bfs(id, 2):
+        print(el)
+
+        if get_username(USERS_DB, el) not in [i.name for i in get_subscribes(main_user.name)]:
+            fyp.append(User(el, get_username(USERS_DB, el)))
 
     if not are_friends(main_user.name, username):
         return redirect(f"/{username}")
