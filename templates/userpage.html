@@ -27,7 +27,7 @@
       <button class="button">Profile</button>
     </form>
 
-    <button class="button">Messages</button>
+   <form action="/messages" method="POST"><button class="button">Messages</button></form>
         <form action="/search" method="POST">
           <button class="button">Search 🔍</button>
             </form>
@@ -39,6 +39,7 @@
 </div>
 
 <div class="main">
+<h1>User profile</h1>
       <div id="postModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeModal()">&times;</span>
@@ -86,7 +87,7 @@
 <div id="followingModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeFollowingModal()">&times;</span>
-    <h2>Followers</h2>
+    <h2>Subscribing</h2>
     <div class="followers-list">
             {% for sub in subs %}
       <div class="user-item"><a style="color:darkcyan;" href="{{ url_for('user_profile', username=sub.name) }}">{{ sub.name }}</a></div>
@@ -134,7 +135,7 @@
 
 {% if data.admin == "True" or data.admin=="ADMIN" %}
 
-    <form action="/admin" style="margin-left: 30vw">
+    <form action="/adminpage" style="margin-left: 30vw" method="POST">
     <div class="user-buttons">
 
 

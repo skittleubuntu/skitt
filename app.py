@@ -10,10 +10,58 @@ app = Flask(__name__)
 
 
 
+@app.route("/api/get_messages/<sender>/<claimer>")
+def get_messages(sender, claimer):
+
+    id = request.cookies.get("id")
+    hash = request.cookies.get("hash_key")
+    if not check_hash(HASH_DB, id, hash):
+        return jsonify({"error": "unauthorized"}), 401
+
+    chatid = get_chat_id(CHATS_DB, sender, claimer)
+    messages = read_messages(chatid)
+
+    return jsonify(messages)
+
+
+@app.route("/api/send_message/<sender>/<claimer>", methods=["POST", "GET"])
+def send_message(sender, claimer):
+    global m
+    id = request.cookies.get("id")
+    hash = request.cookies.get("hash_key")
+    print(id, hash)
+    if not check_hash(HASH_DB, id, hash):
+        return redirect("/login")
+
+    if sender != get_username(USERS_DB, id):
+        return redirect("/login")
+
+    message = request.args.get("message")
+    print(sender, claimer, message)
+
+
+    chatid = get_chat_id(CHATS_DB, sender, claimer)
+    write_messages(chatid, sender, claimer, message)
+
+    return jsonify({"successes":True})
+
+
+@app.route("/api/getusers", methods=["POST", "GET"])
+def get_users_api():
+    usernames = request.args.get("usernames")
+    print(usernames)
+
+    users = get_users_by_name(USERS_DB, usernames.lower())
+    users_serialized = [{"id": user.id, "name": user.name} for user in users]
+
+    return jsonify(users_serialized)
+
+
 
 @app.route("/api/code", methods=["POST"])
 def get_ref_code():
-    id = request.cookies.get("user_id")
+    id = request.cookies.get("id")
+    print(id)
     main_user = User(id, get_username(USERS_DB, id))
     code = ""
     if request.method == "POST":
@@ -27,8 +75,10 @@ def get_ref_code():
             return redirect(f"/{main_user.name}")
 
         print(f"{user} ad +1")
-        do_verified_user(user)
-        do_verified_user(main_user.name,user)
+        print(main_user.name)
+        do_verified_user(user, main_user.name)
+        do_verified_user(main_user.name)
+        serverinfo_add("verified_users", 2)
 
 
 
@@ -50,6 +100,8 @@ def get_posts_api():
         "time": post.day
     } for post in posts]
 
+
+
     return jsonify(post_dicts)
 
 
@@ -59,16 +111,25 @@ def get_posts_api():
 def internal_server_error(e):
     return render_template('500.html'), 500
 
+from flask import request, redirect, render_template, make_response
+
 @app.route("/", methods=["POST", "GET"])
 def index():
-
-
     user_id = request.cookies.get("id")
+    visited = request.cookies.get("visited")
+    set_cookie_needed = False
+
+    if visited is None:
+        serverinfo_add("visited", 1)
+        set_cookie_needed = True
 
     g = Graph()
     fyp = []
 
+
+
     for el in g.bfs(user_id, 2):
+        print(el)
         fyp.append(User(el, get_username(USERS_DB, el)))
 
     hash = request.cookies.get("hash_key")
@@ -76,17 +137,26 @@ def index():
         print("No coockies")
         return redirect("/login")
 
-    if check_hash(HASH_DB,user_id, hash):
+    if check_hash(HASH_DB, user_id, hash):
         main_user = User(user_id, get_username(USERS_DB, user_id))
-        posts = read_posts(POSTS_DB, offset=0, limit=10)
-
+        posts = read_posts(POSTS_DB, offset=0, limit=10, stop_at_id=1)
     else:
         print("No coockies")
         return redirect("/login")
+
     if request.method == "POST":
         return redirect("/")
 
-    return render_template("index.html", main_user=main_user, posts=posts, fyp=fyp)
+
+    response = make_response(render_template("index.html", main_user=main_user, posts=posts, fyp=fyp))
+
+
+    if set_cookie_needed:
+        response.set_cookie("visited", "1", max_age=600)
+
+
+    return response
+
 
 
 @app.errorhandler(404)
@@ -151,9 +221,34 @@ def user_profile(username):
 
 
 
+@app.route("/adminpage", methods=["POST", "GET"])
+def adminpage():
+
+    id = request.cookies.get("id")
+    hash = request.cookies.get("hash_key")
+
+    if not check_hash(HASH_DB, id, hash):
+        print(id, hash)
+        return redirect("/login")
+
+    main_user = User(id, get_username(USERS_DB, id))
+
+    if not userIsAdmin(main_user.name):
+        print("user not admin")
+        return redirect("/")
+
+    if request.method == "POST":
+        return redirect("/adminpage")
+
+    data = get_serverinfo()
+
+    return render_template("adminpage.html", main_user=main_user, data=data)
+
+
+
 @app.route("/makepost/<page>/<userid>", methods=["POST"])
 def makepost(page, userid):
-
+    serverinfo_add("posts", 1)
     if request.method == "POST":
         title = request.form.get("title")
         text = request.form.get("content")
@@ -170,6 +265,7 @@ def makepost(page, userid):
 
 @app.route('/reply/<post_id>/<user_id>', methods=['POST'])
 def makereply(post_id, user_id):
+    serverinfo_add("replies", 1)
     text = request.form['reply_text']
     author = get_username(USERS_DB, user_id)
 
@@ -197,7 +293,9 @@ def login():
 
 
         if check_password(USERS_DB, username, password):
+
             id = get_id(USERS_DB, username)
+            print("Your id ",id)
             response = make_response(redirect("/"))
             response.set_cookie("id", str(id))
             hash = get_hash(HASH_DB, id)
@@ -220,7 +318,10 @@ def verify(username):
     print(code)
 
     if request.method == "GET":
-        # Надсилаємо код тільки при відкритті сторінки вперше
+
+
+
+
         spam(email, code)
 
     if request.method == "POST":
@@ -232,7 +333,7 @@ def verify(username):
             hash = generate_hash(HASH_DB, id)
             response.set_cookie("user_id", str(id))
             response.set_cookie("hash_key", hash)
-
+            serverinfo_add("users", 1)
             print(hash)
             return response
         else:
@@ -297,11 +398,84 @@ def notify():
 
     return render_template("notify.html", main_user=main_user, notifys=notifys, fyp=fyp)
 
+@app.route("/search", methods=["POST", "GET"])
+def search():
+    id = request.cookies.get("id")
+    hash = request.cookies.get("hash_key")
+    print(id, hash)
+    if not check_hash(HASH_DB, id ,hash):
+        return redirect("/login")
+
+    if request.method == "POST":
+        return redirect("/search")
+
+
+    g = Graph()
+    fyp = [User(el, get_username(USERS_DB, el)) for el in g.bfs(id, 2)]
+
+    main_user = User(id, get_username(USERS_DB, id))
+
+
+    return render_template("search.html", main_user=main_user, fyp=fyp)
+
+
+@app.route("/messages", methods = ["POST", "GET"])
+def messages():
+    id = request.cookies.get("id")
+    hash = request.cookies.get("hash_key")
+    print(id, hash)
+    if not check_hash(HASH_DB, id ,hash):
+        return redirect("/login")
+
+    g = Graph()
+    fyp = [User(el, get_username(USERS_DB, el)) for el in g.bfs(id, 2)]
+
+    main_user = User(id, get_username(USERS_DB, id))
+
+    if request.method == "POST":
+        return redirect("/messages")
+
+    lst = get_users(USERS_DB)
+    users = []
+    for user in lst:
+        if are_friends(main_user.name, user):
+            users.append(User(get_id(USERS_DB, user), user))
+
+    return render_template("messages.html", main_user=main_user, fyp=fyp, users=users)
+
+
+@app.route("/messages/<username>", methods = ["POST", "GET"])
+def chat(username):
+    id = request.cookies.get("id")
+    hash = request.cookies.get("hash_key")
+    print(id, hash)
+    if not check_hash(HASH_DB, id ,hash):
+        return redirect("/login")
+
+    g = Graph()
+    fyp = [User(el, get_username(USERS_DB, el)) for el in g.bfs(id, 2)]
+
+    main_user = User(id, get_username(USERS_DB, id))
+    friend = User(get_id(USERS_DB, username), username)
+
+
+    if not are_friends(main_user.name, username):
+        return redirect("/index")
+
+    else:
+        if not chat_exist(CHATS_DB, main_user.name, friend.name):
+           chatid = create_new_chat(CHATS_DB, main_user.name, friend.name)
+        else:
+            chatid = get_chat_id(CHATS_DB, main_user.name, friend.name)
 
 
 
+    messages = read_messages(chatid)
 
 
+    return render_template("chat.html", main_user=main_user, fyp=fyp, friend=friend,messages=messages
+
+                           )
 
 if __name__ == '__main__':
     app.run(debug=True)

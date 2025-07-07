@@ -10,7 +10,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import secrets
 
-from static import USERS_DB, POSTS_DB
+from static import USERS_DB, POSTS_DB, HASH_DB, CHATS_DB
 
 
 def userIsExist(user, file):
@@ -92,32 +92,37 @@ def get_username(file, id):
 
     return False
 
-def read_posts(file, offset=0, limit=10):
+def read_posts(file, offset=0, limit=10, stop_at_id=None):
     with open(file, "r") as f:
         reader = csv.DictReader(f)
         rows = list(reader)
 
-    total = len(rows)
 
-    # Визначаємо індекси зрізу з кінця списку
-    start = max(total - offset - limit, 0)
-    end = total - offset
+    rows = rows[::-1]
 
-    sliced_rows = rows[start:end]
+
+    if stop_at_id is not None:
+        for i, row in enumerate(rows):
+            if row["id"] == str(stop_at_id):
+
+                rows = rows[:i+1]
+                break
+
+
+    sliced_rows = rows[offset:offset + limit]
 
     posts = []
     for row in sliced_rows:
         posts.append(Post(
-            row["id"],
+            int(row["id"]),
             row["author"],
             row["title"],
             row["text"],
             row["day"]
         ))
 
-    # Тепер вони вже від найстарших (start) до найновіших (end),
-    # тому перевертаємо, щоб найновіші були спочатку
-    return reversed(posts)
+    return posts
+
 
 
 def get_user_posts(file, username):
@@ -163,6 +168,8 @@ def make_post(file, author, text, title):
 
         hour = today.hour
         minute = today.minute
+
+
 
 
         writer.writerow({
@@ -249,7 +256,8 @@ def spam(email, large_number):
 
 
 
-    # Тіло листа з числом, яке буде великими цифрами
+
+
     MESSAGE = f"""
         <html>
             <body>
@@ -259,7 +267,7 @@ def spam(email, large_number):
         </html>
     """
 
-    # Формування листа
+
     msg = MIMEMultipart()
     msg["From"] = EMAIL_SENDER
     msg["To"] = EMAIL_RECEIVER
@@ -293,7 +301,7 @@ def get_post(file, post_id):
             )
 
 
-        return reversed(posts)
+
 
 
 def read_replyes(file, id):
@@ -342,12 +350,13 @@ def make_reply(file, postid, author, text):
         hour = today.hour
         minute = today.minute
 
+
         writer.writerow({
-            "postid": postid,
-            "author": author,
-            "text": text,
-            "day": f"{day}/{month}/{year} - {hour}:{minute}",
-        })
+                "postid": postid,
+                "author": author,
+                "text": text,
+                "day": f"{day}/{month}/{year} - {hour}:{minute}",
+            })
 
 
 
@@ -388,6 +397,18 @@ def get_users(file):
             result.append(row["username"])
 
     return result
+
+def get_users_by_name(file, username):
+    with open(file, "r") as f:
+        result = []
+        reader = csv.DictReader(f)
+        for row in reader:
+            user = (row["username"])
+            if user.lower().strip().startswith(username):
+                result.append(User(get_id(file,user), user))
+
+    return result
+
 
 
 
@@ -449,7 +470,7 @@ def unsubscribe(user, king):
         writer.writeheader()
         writer.writerows(rows)
 
-    # Видалити з followers.csv у "king"
+
     followers_path = f"users/{king}/followers.csv"
     with open(followers_path, "r", newline='') as f:
         reader = csv.DictReader(f)
@@ -484,7 +505,7 @@ def get_subscribes(username):
 
 
 
-print(get_subscribes("skittle"))
+
 
 
 def get_followers(username):
@@ -534,7 +555,7 @@ def do_verified_user(user, user_fornotify=''):
     filepath = f"users/{user}/info.csv"
 
 
-    if user_fornotify:
+    if user_fornotify != '':
         text_notify = f"[user:{user_fornotify}] write your referral code!"
         make_notify(user, text_notify)
 
@@ -568,6 +589,9 @@ def do_verified_user(user, user_fornotify=''):
 
 
 def make_notify(user, info):
+
+
+
     now = datetime.datetime.now().strftime("%d/%m/%Y - %H:%M")
     with open(f"users/{user}/notify.txt", "a") as f:
         f.write(f"{info}\t{now}\n")
@@ -603,13 +627,128 @@ def read_notify(user):
 
             notify.append(data)
 
-    print(notify)
+
     return notify
 
 
+def serverinfo_add(key, value:int):
+
+    filename = "other/serverinfo.csv"
+
+    with open(filename, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        rows = list(reader)
+
+    if rows:
+        row = rows[0]
+        row[key] = str(int(row[key]) + value)
 
 
 
+    with open(filename, 'w', newline='') as csvfile:
+        fieldnames = ['visited', 'users', 'posts', 'replies', 'verified_users']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        writer.writeheader()
+        writer.writerow(row)
 
 
-read_notify("skittle")
+def get_serverinfo():
+
+    filename = "other/serverinfo.csv"
+
+    with open(filename, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        rows = list(reader)
+        return rows[0]
+
+def userIsAdmin(user):
+    with open(f"users/{user}/info.csv", "r") as f:
+        reader = csv.DictReader(f)
+
+        for row in reader:
+            if row["admin"] != "False":
+                return True
+    return False
+
+
+users = ["diego","cindy","anna","brian"]
+
+for user in users:
+    subscribe(USERS_DB,"skittleNotReal", user )
+
+
+
+def chat_exist(file, user1,user2):
+    with open(file, "r") as f:
+        reader = csv.DictReader(f)
+
+        for row in reader:
+            if (row["user1"] == user1 and row["user2"] == user2) or (row["user2"] == user1 and row["user1"] == user2):
+                return True
+
+    return False
+
+
+def get_chat_id(file, user1,user2):
+    with open(file, "r") as f:
+        reader = csv.DictReader(f)
+
+        for row in reader:
+            if (row["user1"] == user1 and row["user2"] == user2) or (row["user2"] == user1 and row["user1"] == user2):
+                return row["chatid"]
+
+    return False
+
+
+def create_new_chat(file, user1, user2):
+    max_chatid = 0
+
+    with open(file, 'r') as f:
+        for line in f:
+            parts = line.strip().split(',')
+            if len(parts) == 3 and parts[2].isdigit():
+                max_chatid = max(max_chatid, int(parts[2]))
+
+    new_chatid = max_chatid + 1
+
+    with open(file, 'a') as f:
+        f.write(f"{user1},{user2},{new_chatid}\n")
+
+
+    chat_filename = f"chats/{new_chatid}.csv"
+    with open(chat_filename, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["sender", "claimer", "text", "time"])
+
+    return new_chatid
+
+
+def write_messages(chatid, sender, claimer, text):
+    with open(f"chats/{chatid}.csv", "a", newline='') as f:
+        fieldnames = ["sender", "claimer", "text", "time"]
+        time = datetime.datetime.now().strftime("%H:%M")
+
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+
+
+
+        writer.writerow({
+            "sender": sender,
+            "claimer": claimer,
+            "text": text,
+            "time": time
+        })
+
+
+
+def read_messages(chatid):
+
+    result = []
+
+    with open(f"chats/{chatid}.csv", "r") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            result.append({"sender_name":row["sender"], "content":row["text"], "time":row["time"]})
+
+    return result

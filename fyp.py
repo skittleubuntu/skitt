@@ -78,7 +78,6 @@ class Graph:
 
         for i in range(len(users)):
             for j in range(i, len(users)):
-                print(f"{users[i].name} and {users[j].name} are Freinds? {are_friends(users[i].name, users[j].name)}")
                 if are_friends(users[i].name, users[j].name):
                     self.add_edge(users[i].id, users[j].id)
 

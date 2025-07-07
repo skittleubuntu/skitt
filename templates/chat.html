@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chat</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+
+
+
+
+</head>
+<body>
+
+<div class="header">
+  <h1><a href="/">Skitt</a></h1>
+  <form action="/logout" method="POST">
+    <button class="logout-btn">Logout</button>
+  </form>
+</div>
+
+<div class="left">
+  <div class="button-column">
+    <form action="/" method="POST"><button class="button">Home</button></form>
+    <form action="/{{ main_user.name }}" method="POST"><button class="button">Profile</button></form>
+    <form action="/messages" method="POST"><button class="button">Messages</button></form>
+    <form action="/search" method="POST"><button class="button">Search 🔍</button></form>
+    <form action="/notify" method="POST"><button class="button">Notify</button></form>
+    <button class="button" style="background-color: cornflowerblue" onclick="openModal()">Make post</button>
+  </div>
+</div>
+
+<div class="main">
+  <h1>Chat with <a href="/{{ friend.name }}">{{ friend.name }}</a></h1>
+
+  <div class="chat-window">
+    <div class="messages" id="chat-messages">
+      {% for msg in messages %}
+        <div class="message {% if msg.sender_name == main_user.name %}my-message{% else %}friend-message{% endif %}">
+          <strong>{% if msg.sender_name != main_user.name %}{{ msg.sender_name }}: {% endif %}</strong>{{ msg.content }}
+          <div class="time">{{ msg.time }}</div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <form onsubmit="event.preventDefault(); sendMessage('{{ main_user.name }}', '{{ friend.name }}');" class="message-form">
+  <textarea name="message" placeholder="Type your message..." required></textarea>
+  <button type="submit">Send</button>
+</form>
+  </div>
+</div>
+
+<div class="right">
+  <div class="info-box" style="background-color: cornflowerblue">
+    <h4><a style="color:black" href="{{ url_for('user_profile', username=main_user.name) }}">{{ main_user.name }}</a></h4>
+    <p>Your profile</p>
+  </div>
+  {% for f in fyp %}
+    <div class="info-box">
+      <h4><a href="{{ url_for('user_profile', username=f.name) }}">{{ f.name }}</a></h4>
+      <p>Maybe you must know</p>
+    </div>
+  {% endfor %}
+</div>
+
+<!-- Modal script (якщо потрібен для постів) -->
+<script>
+ async function fetchMessages(sender, claimer) {
+    try {
+      const response = await fetch(`/api/get_messages/${sender}/${claimer}`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        console.error("Не вдалося завантажити повідомлення");
+        return;
+      }
+
+      const messages = await response.json();
+      const chatBox = document.getElementById("chat-messages");
+      chatBox.innerHTML = ""; // очищаємо перед оновленням
+
+      messages.forEach(msg => {
+        const div = document.createElement("div");
+        div.className = "message " + (msg.sender_name === "{{ main_user.name }}" ? "my-message" : "friend-message");
+
+        div.innerHTML = `<strong>${msg.sender_name !== "{{ main_user.name }}" ? msg.sender_name + ": " : ""}</strong>${msg.content}
+                         <div class="time">${msg.time}</div>`;
+        chatBox.appendChild(div);
+      });
+
+      chatBox.scrollTop = chatBox.scrollHeight; // скрол вниз
+
+    } catch (err) {
+      console.error("Помилка під час fetch:", err);
+    }
+  }
+
+
+  setInterval(() => {
+    fetchMessages('{{ main_user.name }}', '{{ friend.name }}');
+  }, 2000);
+
+
+     async function sendMessage(sender, claimer) {
+
+
+
+    const textarea = document.querySelector('textarea[name="message"]');
+    const message = textarea.value.trim();
+
+    if (!message) return;
+
+    try {
+      const url = `/api/send_message/${sender}/${claimer}?message=${encodeURIComponent(message)}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        credentials: 'include'
+      });
+
+      if (response.redirected) {
+
+        window.location.href = response.url;
+        return;
+      }
+
+      if (!response.ok) {
+        console.error("Помилка при відправці:", await response.text());
+      } else {
+        textarea.value = "";
+        fetchMessages(sender, claimer)
+        console.log("Повідомлення надіслано!");
+
+      }
+
+    } catch (err) {
+      console.error("Fetch error:", err);
+    }
+
+
+
+  }
+
+
+
+  const postModal = document.getElementById('postModal');
+
+  function openModal() {
+    postModal.style.display = 'flex';
+  }
+
+  function closeModal() {
+    postModal.style.display = 'none';
+  }
+
+  window.onclick = function(event) {
+    if (event.target === postModal) closeModal();
+  };
+
+
+  window.onload = () => {
+    const chat = document.getElementById('chat-messages');
+
+    chat.scrollTop = chat.scrollHeight;
+  };
+</script>
+
+</body>
+</html>

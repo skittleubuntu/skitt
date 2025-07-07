@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Search Users</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+<body>
+
+<div class="header">
+  <h1><a href="/">Skitt</a></h1>
+  <form action="/logout" method="POST">
+    <button class="logout-btn">Logout</button>
+  </form>
+</div>
+
+<div class="left">
+  <div class="button-column">
+    <form action="/" method="POST"><button class="button">Home</button></form>
+    <form action="/{{ main_user.name }}" method="POST"><button class="button">Profile</button></form>
+  <form action="/messages" method="POST"><button class="button">Messages</button></form>
+    <form action="/search" method="POST"><button class="button">Search 🔍</button></form>
+    <form action="/notify" method="POST"><button class="button">Notify</button></form>
+    <button class="button" style="background-color: cornflowerblue" onclick="openModal()">Make post</button>
+  </div>
+</div>
+
+<div class="main">
+    <h1>Messages</h1>
+
+  <div id="results">
+{% for user in users %}
+<div class="simple-block">
+            <a href="/messages/{{user.name}}">{{ user.name }}</a>
+          </div>
+      {% endfor %}
+
+  </div>
+
+</div>
+
+<div class="right">
+  <div class="info-box" style="background-color: cornflowerblue">
+    <h4><a style="color:black" href="{{ url_for('user_profile', username=main_user.name) }}">{{ main_user.name }}</a></h4>
+    <p>Your profile</p>
+  </div>
+  {% for f in fyp %}
+  <div class="info-box">
+    <h4><a href="{{ url_for('user_profile', username=f.name) }}">{{ f.name }}</a></h4>
+    <p>Maybe you must know</p>
+  </div>
+  {% endfor %}
+</div>
+<script>
+
+
+
+  const postModal = document.getElementById('postModal');
+
+  function openModal() {
+    postModal.style.display = 'flex';
+  }
+
+  function closeModal() {
+    postModal.style.display = 'none';
+  }
+
+  window.onclick = function(event) {
+    if (event.target === postModal) closeModal();
+  };
+</script>
+
+</body>
+</html>

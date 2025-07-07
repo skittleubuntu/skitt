@@ -66,7 +66,7 @@ function loadMorePosts() {
     <h3 class="author">
       <a class="post-link" href="/${post.author}">${post.author}</a>
     </h3>
-    <h2 class="title">${post.title}</h2>
+    <h2 class="title">${post.title} ${ post.id }</h2>
   </div>
 
   <div class="post-content">
@@ -123,7 +123,7 @@ function loadMorePosts() {
 
 
 
-      <button class="button">Messages</button>
+        <form action="/messages" method="POST"><button class="button">Messages</button></form>
 
        <form action="/search" method="POST">
           <button class="button">Search 🔍</button>
@@ -139,12 +139,12 @@ function loadMorePosts() {
   </div>
 
   <div class="main" id="posts-container">
-
+    <h1>Main page</h1>
       <div id="postModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeModal()">&times;</span>
     <form action="/makepost/index/{{main_user.id}}" method="POST">
-      <h2>New post</h2>
+      <h2 style="margin-bottom: 10px">New post</h2>
       <input type="text" name="title" placeholder="Tittle" required><br><br>
       <textarea name="content" placeholder="What's happened today?" rows="6" required></textarea><br><br>
       <button type="submit" class="post-button">Send</button>
@@ -163,7 +163,7 @@ function loadMorePosts() {
 <a class="post-link" href="{{ url_for('user_profile', username=post.author) }}">{{ post.author }}</a>
 
 </h3>
-    <h2 class="title">{{ post.title }}</h2>
+    <h2 class="title">{{ post.title }} {{ post.id }}</h2>
   </div>
 
   <div class="post-content">

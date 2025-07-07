@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Search Users</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+<body>
+
+<div class="header">
+  <h1><a href="/">Skitt</a></h1>
+  <form action="/logout" method="POST">
+    <button class="logout-btn">Logout</button>
+  </form>
+</div>
+
+<div class="left">
+  <div class="button-column">
+    <form action="/" method="POST"><button class="button">Home</button></form>
+    <form action="/{{ main_user.name }}" method="POST"><button class="button">Profile</button></form>
+   <form action="/messages" method="POST"><button class="button">Messages</button></form>
+    <form action="/search" method="POST"><button class="button">Search 🔍</button></form>
+    <form action="/notify" method="POST"><button class="button">Notify</button></form>
+    <button class="button" style="background-color: cornflowerblue" onclick="openModal()">Make post</button>
+  </div>
+</div>
+
+<div class="main">
+        <h1>Search users</h1>
+
+
+  <div class="search-container">
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Write a username..."
+      autocomplete="off"
+    />
+
+    <svg class="search-icon" viewBox="0 0 24 24">
+      <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16a6.471 6.471 0 004.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zM10 14a4 4 0 110-8 4 4 0 010 8z"/>
+    </svg>
+  </div>
+
+
+  <div id="results">
+
+  </div>
+
+</div>
+
+<div class="right">
+  <div class="info-box" style="background-color: cornflowerblue">
+    <h4><a style="color:black" href="{{ url_for('user_profile', username=main_user.name) }}">{{ main_user.name }}</a></h4>
+    <p>Your profile</p>
+  </div>
+  {% for f in fyp %}
+  <div class="info-box">
+    <h4><a href="{{ url_for('user_profile', username=f.name) }}">{{ f.name }}</a></h4>
+    <p>Maybe you must know</p>
+  </div>
+  {% endfor %}
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  getUsers("");
+});
+
+
+      const input = document.getElementById('searchInput');
+
+  input.addEventListener('input', () => {
+    const value = input.value;
+    getUsers(value);
+  });
+
+ function getUsers(user) {
+  fetch(`/api/getusers?usernames=${encodeURIComponent(user)}`)
+    .then(response => response.json())
+    .then(data => {
+      const container = document.getElementById("results");
+      container.innerHTML = ""; //
+
+      data.forEach(user => {
+        const postHTML = `
+          <div class="simple-block">
+            <a href="/${user.name}">${user.name}</a>
+          </div>`;
+        container.insertAdjacentHTML("beforeend", postHTML);
+      });
+    })
+    .catch(err => console.error("Помилка при fetch:", err));
+}
+
+
+
+  const postModal = document.getElementById('postModal');
+
+  function openModal() {
+    postModal.style.display = 'flex';
+  }
+
+  function closeModal() {
+    postModal.style.display = 'none';
+  }
+
+  window.onclick = function(event) {
+    if (event.target === postModal) closeModal();
+  };
+</script>
+
+</body>
+</html>
