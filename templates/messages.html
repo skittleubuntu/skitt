@@ -28,6 +28,21 @@
 </div>
 
 <div class="main">
+
+   <div id="postModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <form action="/makepost/messages/{{main_user.id}}" method="POST">
+      <h2 style="margin-bottom: 10px">New post</h2>
+      <input type="text" name="title" placeholder="Tittle" required><br><br>
+      <textarea name="content" placeholder="What's happened today?" rows="6" required></textarea><br><br>
+      <button type="submit" class="post-button">Send</button>
+    </form>
+  </div>
+</div>
+
+
+
     <h1>Messages</h1>
 
   <div id="results">
